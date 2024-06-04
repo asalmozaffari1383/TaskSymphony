@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS mydata;
+
+
+CREATE TABLE mydata (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  data_text TEXT NOT NULL,
+  iscomplited BOOL 
+);
