@@ -1,0 +1,15 @@
+// adding user:
+
+{
+    "user_name" : "asal",
+    "user_email": "asalmozaffari832@gmail.com",
+    "user_pass": "123456789"
+    }
+
+// adding Task:
+
+{
+    "task_title" : "exams",
+    "task_dsc" : "I have exam for today",
+    "task_done" : False
+}

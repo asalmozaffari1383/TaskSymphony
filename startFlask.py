@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 from User import User
+from Task import Task
 
 app = Flask(__name__)
 
@@ -15,7 +16,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo_list.db'
 #Initialize The Database
 db = SQLAlchemy(app)
 
-# Create Model
+# Create Model For Users
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(200), nullable=False)
@@ -26,6 +27,17 @@ class Users(db.Model):
     def __repr__(self):
         return '<Name %r>' % self.user_name
 
+
+# Create Model For Tasks
+class Tasks(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    task_title = db.Column(db.String(100))
+    task_dsc = db.Column(db.String(1000))
+    task_done = db.Column(db.Boolean, default=True)
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Title %r>' % self.task_title
 
 
 def __init__():
@@ -70,9 +82,8 @@ def get_data():
         pass
 
 
-@app.route("/login", methods=['POST'])
-def user_login():
-    
+def getJsonData():
+
     myJsonData = {}
 
     content_type = request.headers.get('Content-Type')
@@ -82,34 +93,41 @@ def user_login():
         data = json.loads(request.data)
         myJsonData = data
 
+    return myJsonData
+
+
+def addUserDataToModel(JsonData):
     my_user = User()
     try:
-        my_user.user_name = myJsonData.get("user_name")
-        my_user.user_email = myJsonData.get("user_email")
-        my_user.user_pass = myJsonData.get("user_pass")
+        my_user.user_name = JsonData.get("user_name")
+        my_user.user_email = JsonData.get("user_email")
+        my_user.user_pass = JsonData.get("user_pass")
         return my_user
     except:
+        return "Error"
+
+
+@app.route("/login", methods=['POST'])
+def user_login():
+    
+    myJsonData = getJsonData()
+
+    my_user = addUserDataToModel(myJsonData)
+
+    if my_user == "Error":
         return myJsonData
+    else:
+        return my_user
+    
 
 
 @app.route("/signup", methods=['POST'])
 def user_signup():
-    myJsonData = {}
+    myJsonData = getJsonData()
 
-    content_type = request.headers.get('Content-Type')
-    if (content_type == 'application/json'):
-        myJsonData = request.json
-    else:
-        data = json.loads(request.data)
-        myJsonData = data
+    my_user = addUserDataToModel(myJsonData)
 
-    my_user = User()
-    try:
-        my_user.user_name = myJsonData.get("user_name")
-        my_user.user_email = myJsonData.get("user_email")
-        my_user.user_pass = myJsonData.get("user_pass")
-
-    except:
+    if my_user == "Error":
         return myJsonData
     
 
@@ -133,6 +151,7 @@ def user_signup():
 def getAllUsers():
     our_users = Users.query.order_by(Users.date_added)
 
+    #todo
     t = ""
     for i in our_users:
         t += i.email + " "
@@ -141,3 +160,49 @@ def getAllUsers():
 
 
     #return str(type(our_users))
+
+
+def addTaskDataToModel(jsonData):
+    my_task = Task()
+    try:
+        my_task.task_title = jsonData.get("task_title")
+        my_task.task_dsc = jsonData.get("task_dsc")
+        my_task.task_done = jsonData.get("task_done")
+        return my_task
+    except:
+        return "Error"
+    
+
+@app.route("/addTask", methods = ['POST'])
+def addTask():
+    myJsonData = getJsonData()
+
+    my_task = addTaskDataToModel(myJsonData)
+
+    if my_task == "Error":
+        return myJsonData
+    
+    # Add Task TO The Database.
+    if my_task is not None:
+        task = None
+        task = Tasks(
+            task_title = my_task.task_title,
+            task_dsc = my_task.task_dsc,
+            task_done = my_task.task_done
+        )
+        db.session.add(task)
+        db.session.commit()
+        return "OK"
+    else:
+        return "Error in adding the Task!"
+    
+@app.route("/getAllTask")
+def getAllTask():
+    our_tasks = Tasks.query.order_by(Tasks.date_added)
+
+    t = ""
+    for i in our_tasks:
+        t += i.task_title + " "
+
+        
+    return t
