@@ -78,7 +78,18 @@ def get_data():
     }
 """
 
+# Remove the task.
+@app.route('/task/<int:task_id>', methods=['DELETE'])
+def remove_task(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({'message': 'Task deleted successfully'})
+    return jsonify({'message': 'Task not found'})
 
+
+# get users tasks
 @app.route('/user/<int:user_id>/tasks', methods=['GET'])
 def get_user_tasks(user_id):
     user = User.query.get(user_id)
