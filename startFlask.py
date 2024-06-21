@@ -4,6 +4,7 @@ from markupsafe import escape
 from flask import request , json
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask import jsonify
 
 from User import User
 from Task import Task
@@ -17,24 +18,28 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo_list.db'
 db = SQLAlchemy(app)
 
 # Create Model For Users
-class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class User(db.Model):
+    id = db.Column(db.Integer,  =True)
     user_name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False, unique=True)
     user_pass = db.Column(db.String(200), nullable=False)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
+
+    tasks = db.relationship('Task', backref='user', lazy=True)
 
     def __repr__(self):
         return '<Name %r>' % self.user_name
 
 
 # Create Model For Tasks
-class Tasks(db.Model):
+class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_title = db.Column(db.String(100))
     task_dsc = db.Column(db.String(1000))
     task_done = db.Column(db.Boolean, default=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self):
         return '<Title %r>' % self.task_title
@@ -66,6 +71,29 @@ def get_data():
         "xx" : [1,2,3]
     }
 """
+
+
+@app.route('/user/<int:user_id>/tasks', methods=['GET'])
+def get_user_tasks(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    
+    tasks = Task.query.filter_by(user_id=user_id).all()
+    task_list = []
+    for task in tasks:
+        task_data = {
+            'id': task.id,
+            'task_title': task.task_title,
+            'task_dsc': task.task_dsc,
+            'task_done': task.task_done,
+            'date_added': task.date_added
+        }
+        task_list.append(task_data)
+    
+    return jsonify({'tasks': task_list})
+
+
 @app.route("/data", methods=['POST', 'GET'])
 def get_data():
     if request.method == "POST":
