@@ -78,6 +78,19 @@ def get_data():
     }
 """
 
+# Edit task done
+@app.route('/task/<int:task_id>/status', methods=['POST'])
+def update_task_status(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+
+    data = request.get_json()
+    task.task_done = data.get('task_done', task.task_done)
+
+    db.session.commit()
+    return jsonify({'message': 'Task status updated successfully'})
+
 # Edit password
 @app.route('/user/<int:user_id>/password', methods=['POST'])
 def edit_user_password(user_id):
