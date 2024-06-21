@@ -78,6 +78,22 @@ def get_data():
     }
 """
 
+# Edit password
+@app.route('/user/<int:user_id>/password', methods=['POST'])
+def edit_user_password(user_id):
+
+    user = db.session.query(User).filter_by(id=user_id).first()
+    if user:
+        data = request.json
+        user.user_pass = data.get('user_pass', user.user_pass)
+
+        db.session.commit()
+        return jsonify({'message': 'Password updated successfully'})
+    else:
+        return jsonify({'message': 'User not found'})
+
+
+
 # Edit Task
 @app.route('/tasks/<int:task_id>', methods=['POST'])
 def edit_task(task_id):
