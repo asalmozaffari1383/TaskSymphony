@@ -9,6 +9,9 @@ from flask import jsonify
 from User import User
 from Task import Task
 
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+
 app = Flask(__name__)
 
 #Add Database
@@ -18,8 +21,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo_list.db'
 db = SQLAlchemy(app)
 
 # Create Model For Users
-class User(db.Model):
-    id = db.Column(db.Integer,  =True)
+class User(db.Base):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer,  primary_key=True)
     user_name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False, unique=True)
     user_pass = db.Column(db.String(200), nullable=False)
@@ -32,7 +36,8 @@ class User(db.Model):
 
 
 # Create Model For Tasks
-class Task(db.Model):
+class Task(db.Base):
+    __tablename__ = 'task'
     id = db.Column(db.Integer, primary_key=True)
     task_title = db.Column(db.String(100))
     task_dsc = db.Column(db.String(1000))
@@ -40,6 +45,7 @@ class Task(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship("User", backref="tasks")
 
     def __repr__(self):
         return '<Title %r>' % self.task_title
@@ -92,7 +98,6 @@ def get_user_tasks(user_id):
         task_list.append(task_data)
     
     return jsonify({'tasks': task_list})
-
 
 @app.route("/data", methods=['POST', 'GET'])
 def get_data():
@@ -161,9 +166,9 @@ def user_signup():
 
     # Add User To The Database
     if my_user is not None:
-        user = Users.query.filter_by(email=my_user.user_email).first()
+        user = User.query.filter_by(email=my_user.user_email).first()
         if user is None:
-            user = Users(
+            user = User(
                 user_name = my_user.user_name,
                 email = my_user.user_email,
                 user_pass = my_user.user_pass
@@ -177,7 +182,7 @@ def user_signup():
 
 @app.route("/getAllUsers")
 def getAllUsers():
-    our_users = Users.query.order_by(Users.date_added)
+    our_users = User.query.order_by(User.date_added)
 
     #todo
     t = ""
@@ -210,10 +215,10 @@ def addTask():
     if my_task == "Error":
         return myJsonData
     
-    # Add Task TO The Database.
+    """
     if my_task is not None:
         task = None
-        task = Tasks(
+        task = Task(
             task_title = my_task.task_title,
             task_dsc = my_task.task_dsc,
             task_done = my_task.task_done
@@ -224,9 +229,24 @@ def addTask():
     else:
         return "Error in adding the Task!"
     
+    """    # Add Task TO The Database
+
+    
+    # Add Task TO The Database.
+    user = db.session.query(User).filter_by(id=myJsonData.get("user_id")).first()
+
+    if user:
+        new_task = Task(task_title=my_task.task_title, task_desc=my_task.task_dsc, task_done=my_task.task_done)
+        user.tasks.append(new_task)
+        db.session.add(new_task)
+        db.session.commit()
+    else:
+        print("User not found")
+    
+"""
 @app.route("/getAllTask")
 def getAllTask():
-    our_tasks = Tasks.query.order_by(Tasks.date_added)
+    our_tasks = Task.query.order_by(Task.date_added)
 
     t = ""
     for i in our_tasks:
@@ -234,3 +254,6 @@ def getAllTask():
 
         
     return t
+
+"""
+
