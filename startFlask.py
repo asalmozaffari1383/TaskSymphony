@@ -78,6 +78,22 @@ def get_data():
     }
 """
 
+# Edit Task
+@app.route('/tasks/<int:task_id>', methods=['POST'])
+def edit_task(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        return jsonify({'message': 'Task not found'}), 404
+        
+    data = request.get_json()
+    task.task_title = data.get('task_title')
+    task.task_dsc = data.get('task_dsc')
+    task.task_done = data.get('task_done')
+    
+    db.session.commit()
+    
+    return jsonify({'message': 'Task updated successfully'})
+
 # Remove the task.
 @app.route('/task/<int:task_id>', methods=['DELETE'])
 def remove_task(task_id):
