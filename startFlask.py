@@ -183,17 +183,17 @@ def addUserDataToModel(JsonData):
         return "Error"
 
 
-@app.route("/login", methods=['POST'])
-def user_login():
-    
-    myJsonData = getJsonData()
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    my_user = addUserDataToModel(myJsonData)
-
-    if my_user == "Error":
-        return myJsonData
+    user = db.session.query(User).filter(User.user_name == username, User.user_pass == password).first()
+    if user is not None:
+        return jsonify({'message': 'Login successful'})
     else:
-        return my_user
+        return jsonify({'message': 'Login failed'}, 401)
     
 
 
