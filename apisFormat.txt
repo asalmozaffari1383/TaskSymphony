@@ -13,3 +13,30 @@
     "task_dsc" : "I have exam for today",
     "task_done" : False
 }
+
+// login:
+{
+    "username" : "asalm",
+    "password" : "123456789"
+}
+
+// get all user task
+
+{
+    "task_title" : "test2",
+    "task_dsc" : "teeeeeest2",
+    "task_done" : false,
+    "user_id" : 1
+}
+
+// edit task 
+{
+    "task_title" : "test2",
+    "task_dsc" : "teeeeeest2",
+    "task_done" : false
+}
+
+// Edit task done
+{
+    "task_done" : true
+}
